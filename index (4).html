@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NutriMap</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { margin: 0; }
+
+    #map { height: calc(100vh - 175px); width: 100%; }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 40px;
+      border-bottom: 1px solid #eee;
+      flex-wrap: wrap;
+    }
+    nav .logo { font-weight: bold; font-size: 1.2em; color: #2e7d32; }
+    nav button {
+      background: none;
+      border: none;
+      font-size: 1em;
+      margin-left: 24px;
+      cursor: pointer;
+      color: #333;
+    }
+    nav button:hover { color: #2e7d32; }
+
+    .hero {
+      text-align: center;
+      padding: 80px 20px;
+      background: linear-gradient(#f4fbf4, #ffffff);
+    }
+    .hero h1 { font-size: 2.5em; margin-bottom: 10px; }
+    .hero h1 span { color: #2e7d32; }
+    .hero p { color: #555; max-width: 500px; margin: 0 auto 30px; }
+    .hero button {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    .features {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      padding: 40px 20px 80px;
+      flex-wrap: wrap;
+    }
+    .feature-card {
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 24px;
+      width: 220px;
+      text-align: center;
+    }
+    .feature-card .icon { font-size: 1.8em; margin-bottom: 10px; }
+
+    .map-toolbar {
+      padding: 14px 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .toolbar-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .toolbar-row input[type="text"] {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1em;
+    }
+    .toolbar-row select {
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1em;
+      background: white;
+    }
+    .locate-btn {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid #2e7d32;
+      background: white;
+      color: #2e7d32;
+      cursor: pointer;
+      font-size: 0.95em;
+      white-space: nowrap;
+    }
+    .locate-btn:hover { background: #f0f8f0; }
+    .filter-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+      font-size: 0.9em;
+      color: #333;
+    }
+    .pill.active {
+      background: #2e7d32;
+      color: white;
+      border-color: #2e7d32;
+    }
+    .results-count { font-size: 0.85em; color: #777; margin-top: 6px; }
+
+    .about-content { padding: 40px; max-width: 700px; margin: 0 auto; }
+
+    .popup-fav-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.3em;
+      float: right;
+      line-height: 1;
+    }
+    .popup-title { font-size: 1.05em; margin-bottom: 4px; }
+    .popup-row { margin: 4px 0; font-size: 0.9em; }
+    .popup-row b { color: #444; }
+    .popup-link { display: inline-block; margin-top: 6px; margin-right: 10px; font-size: 0.9em; }
+
+    .favorites-content { padding: 30px 40px; max-width: 700px; margin: 0 auto; }
+    .fav-item {
+      border: 1px solid #eee;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+    }
+    .fav-item h4 { margin: 0 0 6px; }
+    .fav-empty { color: #777; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">🌿 NutriMap</div>
+    <div>
+      <button onclick="showPage('home')">Home</button>
+      <button onclick="showPage('map')">Find Resources</button>
+      <button onclick="showPage('favorites')">Favorites</button>
+      <button onclick="showPage('about')">About</button>
+    </div>
+  </nav>
+
+  <div id="home" class="page">
+    <div class="hero">
+      <h1>Find <span>Food &amp; Care</span> Near You</h1>
+      <p>Locate food pantries, SNAP-matching farmers markets, and free clinics across North Carolina — all in one place.</p>
+      <button onclick="showPage('map')">Get Started</button>
+    </div>
+
+    <div class="features">
+      <div class="feature-card">
+        <div class="icon">🥫</div>
+        <h3>Food Pantries</h3>
+        <p>Find pantries near you</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🛒</div>
+        <h3>SNAP Match</h3>
+        <p>Stretch your benefits further</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🩺</div>
+        <h3>Free Clinics</h3>
+        <p>Access care, no cost</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="about" class="page" style="display:none;">
+    <div class="about-content">
+      <h2>About This App</h2>
+      <p>We built this to help families across our communities quickly find food and healthcare resources they may not know are available.</p>
+    </div>
+  </div>
+
+  <div id="favorites" class="page" style="display:none;">
+    <div class="favorites-content">
+      <h2>Your Favorite Locations</h2>
+      <div id="favoritesList"></div>
+    </div>
+  </div>
+
+  <div id="map-page" class="page" style="display:none;">
+    <div class="map-toolbar">
+      <div class="toolbar-row">
+        <input type="text" id="searchBox" placeholder="Search resources..." onkeyup="applyFilters()">
+        <select id="countySelect" onchange="applyFilters()">
+          <option value="all">All Counties</option>
+          <option value="Alamance">Alamance County</option>
+<option value="Ashe">Ashe County</option>
+<option value="Buncombe">Buncombe County</option>
+<option value="Burke">Burke County</option>
+<option value="Cabarrus">Cabarrus County</option>
+<option value="Caldwell">Caldwell County</option>
+<option value="Carteret">Carteret County</option>
+<option value="Catawba">Catawba County</option>
+<option value="Chatham">Chatham County</option>
+<option value="Cherokee">Cherokee County</option>
+<option value="Craven">Craven County</option>
+<option value="Cumberland">Cumberland County</option>
+<option value="Dare">Dare County</option>
+<option value="Durham">Durham County</option>
+<option value="Forsyth">Forsyth County</option>
+<option value="Guilford">Guilford County</option>
+<option value="Haywood">Haywood County</option>
+<option value="Henderson">Henderson County</option>
+<option value="Iredell">Iredell County</option>
+<option value="Jackson">Jackson County</option>
+<option value="Lee">Lee County</option>
+<option value="Macon">Macon County</option>
+<option value="Madison">Madison County</option>
+<option value="Mecklenburg">Mecklenburg County</option>
+<option value="Moore">Moore County</option>
+<option value="Onslow">Onslow County</option>
+<option value="Orange">Orange County</option>
+<option value="Pamlico">Pamlico County</option>
+<option value="Pasquotank">Pasquotank County</option>
+<option value="Pitt">Pitt County</option>
+<option value="Polk">Polk County</option>
+<option value="Rockingham">Rockingham County</option>
+<option value="Rowan">Rowan County</option>
+<option value="Rutherford">Rutherford County</option>
+<option value="Stanly">Stanly County</option>
+<option value="Transylvania">Transylvania County</option>
+<option value="Union">Union County</option>
+<option value="Wake">Wake County</option>
+<option value="Watauga">Watauga County</option>
+<option value="Yadkin">Yadkin County</option>
+<option value="Yancey">Yancey County</option>
+        </select>
+        <button class="locate-btn" onclick="useMyLocation()">Use My Location</button>
+        <input type="text" id="addressBox" placeholder="Enter your address..." style="flex:1; min-width:200px; padding:10px 14px; border:1px solid #ddd; border-radius:8px; font-size:1em;">
+        <button class="locate-btn" onclick="searchAddress()">Go</button>
+      </div>
+      <div class="filter-pills">
+        <button class="pill active" data-cat="all" onclick="setCategory('all', this)">All</button>
+        <button class="pill" data-cat="pantry" onclick="setCategory('pantry', this)">Food Pantries</button>
+        <button class="pill" data-cat="snap" onclick="setCategory('snap', this)">SNAP Markets</button>
+        <button class="pill" data-cat="clinic" onclick="setCategory('clinic', this)">Clinics</button>
+        <button class="pill" data-cat="farm" onclick="setCategory('farm', this)">Farms</button>
+      </div>
+      <div class="results-count" id="resultsCount"></div>
+    </div>
+    <div id="map"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    function showPage(name) {
+      document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+      const target = name === 'map' ? 'map-page' : name;
+      document.getElementById(target).style.display = 'block';
+      if (name === 'map') {
+        setTimeout(() => map.invalidateSize(), 100);
+      }
+      if (name === 'favorites') {
+        renderFavoritesPage();
+      }
+    }
+
+    const map = L.map('map').setView([35.6, -81.5], 7); // Covers Charlotte metro + western NC
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const colors = { pantry: '#e65100', snap: '#2e7d32', clinic: '#1565c0', farm: '#6a1b9a' };
+
+    // Full merged dataset: SNAP Double Bucks markets, free/charitable clinics,
+    // and food pantries (from spreadsheet + Nourish Up's current schedule).
+    // Entries whose "type" or address contains "APPROX" used estimated
+    // coordinates and should be verified before final submission.
+    const locations = [{"id": "snap-1", "name": "Charlotte Regional Farmers Market", "category": "snap", "lat": 35.187431052010865, "lng": -80.9097898773098, "address": "1801 Yorkmont Rd, Charlotte, NC 28217", "dates": "Every other saturday 8am-12:30pm", "eligibility": "SNAP double bucks", "notes": "$50 so up to $100 in tokens", "programs": "", "contact": "", "website": "https://www.ncagr.gov/news/events/snapebt-double-bucks-charlotte-regional-farmers-market-13", "county": "Mecklenburg"}, {"id": "snap-2", "name": "Davidson Farmers Market", "category": "snap", "lat": 35.542086, "lng": -80.95047, "address": "\u200b120 S Main St, Davidson, NC 28036", "dates": "Every saturday April - Thanksgiving | 9am - Noon", "eligibility": "SNAP double bucks, cover low-cost transport for seniors", "notes": "$50 so up to $100 in tokens", "programs": "", "contact": "", "website": "https://www.davidsonfarmersmarket.org/information", "county": "Mecklenburg"}, {"id": "snap-3", "name": "Deep Roots CPS Farm Stand", "category": "snap", "lat": 35.3066, "lng": -80.8994, "address": "2401 Primm Rd, Charlotte, NC", "dates": "June-OctShop in person: Every 1st & 3rd Sunday, 12 PM \u2013 3 PM Pick up your pre-orders: Tuesdays & Thursdays, 10 AM \u2013 3 PM", "eligibility": "SNAP double bucks", "notes": "$50 so up to $100 in tokens and can order online", "programs": "", "contact": "", "website": "https://www.deeprootscpsfarm.com/", "county": "Mecklenburg"}, {"id": "snap-4", "name": "Huntersville Growers' Market", "category": "snap", "lat": 35.4111, "lng": -80.8427, "address": "201 Huntersville-Concord Rd, Huntersville, NC 28078", "dates": "May 2- August 29, 2026, on Saturday's 8:00am-12:00pm", "eligibility": "SNAP double bucks", "notes": "$50 so up to $100 in tokens", "programs": "", "contact": "", "website": "https://www.facebook.com/GrowersMkt/", "county": "Mecklenburg"}, {"id": "snap-5", "name": "Matthews Community Farmers Market", "category": "snap", "lat": 35.1164, "lng": -80.7215, "address": "188 N. Trade St. Matthews, NC 28105", "dates": "Saturdays Year-Round. Main Season 4/12/25 - 11/22/25 8am - 12pm \u200b Winter Season 12/7/24 - 4/5/25 9am - 11 am", "eligibility": "SNAP double bucks", "notes": "$50 so up to $100 in tokens", "programs": "", "contact": "", "website": "https://www.matthewsfarmersmarket.com/", "county": "Mecklenburg"}, {"id": "snap-6", "name": "\u200bNorth Meck Community Farmers Market", "category": "snap", "lat": 35.4868, "lng": -80.8605, "address": "21445 Catawba Ave, Cornelius, NC 28031 - behind Town Hall", "dates": "May 6, 2026- September 30, 2026 Market Hours Wednesdays 9:00 AM- 12:00 PM Last Wednesday of the Month Hours: 5:00 PM- 7:00 PM", "eligibility": "SNAP double bucks", "notes": "$50 so up to $100 in tokens", "programs": "", "contact": "", "website": "https://www.charlottefoodpolicy.com/nmcfm", "county": "Mecklenburg"}, {"id": "snap-7", "name": "Pascuales' Farm", "category": "snap", "lat": 35.2855, "lng": -80.6828, "address": "11237 Plaza Rd Extension, Charlotte, NC 28215", "dates": "Mon Closed Tue 10:00 am \u2013 06:00 pm Wed 10:00 am \u2013 06:00 pm Thu 10:00 am \u2013 06:00 pm Fri 10:00 am \u2013 06:00 pm Sat 10:00 am \u2013 06:00 pm Sun Closed", "eligibility": "SNAP double bucks", "notes": "$50 so up to $100 in tokens", "programs": "", "contact": "", "website": "https://www.pascualesfarm.com/", "county": "Mecklenburg"}, {"id": "snap-8", "name": "Small city farm", "category": "snap", "lat": 35.3017, "lng": -80.916, "address": "1401 Auten Road, Charlotte, NC 28216", "dates": "The Farmstand opens for the 2026 season Memorial Day Weekend. We are closed July 4th, September 5th and November 28th", "eligibility": "SNAP double bucks", "notes": "$50 so up to $100 in tokens", "programs": "", "contact": "", "website": "https://smallcityfarm.com/home-and-contact", "county": "Mecklenburg"}, {"id": "snap-9", "name": "South End Farmers Market", "category": "snap", "lat": 35.2093, "lng": -80.8609, "address": "2000 South Blvd Charlotte, NC 28203", "dates": "Every Saturday 8 am-1 pm", "eligibility": "SNAP double bucks", "notes": "$50 so up to $100 in tokens", "programs": "", "contact": "", "website": "https://southendmkt.com/", "county": "Mecklenburg"}, {"id": "snap-10", "name": "Uptown Farmers Market", "category": "snap", "lat": 35.2254, "lng": -80.8326, "address": "300 S. Davidson St Charlotte, NC 28202", "dates": "SATURDAY\u2019S ONLY Winter Market: January 10 - March 14 Spring Market: April 11 - December 12.Winter Hours: 10:00am - 12:00pm Spring Hours: 8:00am -12:30pm", "eligibility": "SNAP double bucks", "notes": "$50 so up to $100 in tokens . On the third week of every month, Uptown Farmers Market will triple your snap bucks", "programs": "", "contact": "", "website": "300 S. Davidson St, Charlotte, NC 28202", "county": "Mecklenburg"}, {"id": "snap-11", "name": "Ashe Co Farmers Market", "category": "snap", "lat": 36.403045, "lng": -81.491, "address": "108 BackStreet, West Jefferson, NC 28694", "dates": "April-October, Saturdays, 8am-1pm", "eligibility": "SNAP double bucks", "notes": "$20 so up to $40 in tokens", "programs": "WIC cards- $30 Senior FMNP vouchers-$50", "contact": "", "website": "", "county": "Ashe"}, {"id": "snap-12", "name": "Winter King Street Market 252 Poplar Grove Rd. Boone, NC", "category": "snap", "lat": 36.216, "lng": -81.688, "address": "252 Poplar Grove, Boone, NC, 28607", "dates": "Saturdays, 10am-1pm | December-March", "eligibility": "SNAP double bucks", "notes": "Double up to $75 a day so $150 in tokens", "programs": "", "contact": "", "website": "https://www.brwia.org/doubleup.html#how", "county": "Watauga"}, {"id": "snap-13", "name": "High Country Food Hub", "category": "snap", "lat": 36.216, "lng": -81.688, "address": "252 Poplar Grove Rd., Boone, NC", "dates": "Order online Thursday-Monday | Pick up Wednesday | Year-round", "eligibility": "discounted produce for SNAP", "notes": "50% of order for snap-elidgible people . pick up in select locations", "programs": "", "contact": "", "website": "https://www.highcountryfoodhub.org/", "county": "Watauga"}, {"id": "snap-14", "name": "King Street Market", "category": "snap", "lat": 36.220558, "lng": -81.691661, "address": "126 Poplar Grove Connector, Boone, NC \u200b", "dates": "Tuesdays, 3:30pm-6:30pm | May-October", "eligibility": "SNAP double bucks", "notes": "Double up to $75 a day so $150 in tokens", "programs": "", "contact": "", "website": "https://www.brwia.org/doubleup.html#how", "county": "Watauga"}, {"id": "snap-15", "name": "Watauga County Farmers' Market", "category": "snap", "lat": 36.209591, "lng": -81.672643, "address": "591 Horn in the West Dr., Boone, NC", "dates": "Saturdays, 8am-1pm | April-November", "eligibility": "SNAP double bucks", "notes": "Double up to $75 a day so $150 in tokens", "programs": "", "contact": "", "website": "https://www.brwia.org/doubleup.html#how", "county": "Watauga"}, {"id": "snap-16", "name": "French Broad Food Coop", "category": "snap", "lat": 35.591728, "lng": -82.550593, "address": "90 Biltmore Ave., Asheville, NC, 28801", "dates": "8am-8pm daily", "eligibility": "SNAP double bucks", "notes": "$20 so up to $40 in tokens", "programs": "", "contact": "", "website": "https://frenchbroadfood.coop/dufb/", "county": "Buncombe"}, {"id": "snap-17", "name": "Haywood's Historic Farmers Market", "category": "snap", "lat": 35.486, "lng": -82.985, "address": "250 Pigeon St., Waynesville, NC, 28786", "dates": "April-December, Saturday 9am-12pm", "eligibility": "SNAP double bucks", "notes": "$20 so up to $40 in tokens", "programs": "", "contact": "", "website": "https://waynesvillefarmersmarket.com/snapebt/", "county": "Haywood"}, {"id": "snap-18", "name": "Hendersonville Farmers Market", "category": "snap", "lat": 35.314, "lng": -82.458, "address": "650 Maple Street, Hendersonville, NC 28792", "dates": "Saturdays, 9a \u2013 12p April 4 \u2013 December 12", "eligibility": "SNAP double bucks", "notes": "$20 so up to $40 in tokens", "programs": "", "contact": "", "website": "", "county": "Henderson"}, {"id": "snap-19", "name": "Jackson County Farmers Market", "category": "snap", "lat": 35.373, "lng": -83.225, "address": "110 Railroad Ave., Sylva, NC, 28779", "dates": "Year around, Saturdays 9am-12pm", "eligibility": "SNAP double bucks", "notes": "$20 so up to $40 in tokens", "programs": "", "contact": "", "website": "https://jacksoncountyfarmersmarket.org/", "county": "Jackson"}, {"id": "snap-20", "name": "Jarrett's IGA", "category": "snap", "lat": 35.143324, "lng": -82.8231, "address": "191 Main St., Rosman, NC, 28772", "dates": "Monday through Saturday from 7:00 AM to 10:00 PM; Sunday from 8:00 AM to 10:00 PM.", "eligibility": "coupons", "notes": "", "programs": "", "contact": "", "website": "https://jarrett.iga.com/", "county": "Transylvania"}, {"id": "snap-21", "name": "Mars Hill Farmers Market", "category": "snap", "lat": 35.82695, "lng": -82.549567, "address": "50 College St. Mars Hill, NC, 28754", "dates": "Saturdays ~ 10am-1pm ~ April-October", "eligibility": "Snap double bucks", "notes": "$20 so up to $40 in tokens", "programs": "double up to $20 sun bucks for $40 toal. wic fnmp", "contact": "", "website": "https://marshillfarmersandartisansmarket.com/", "county": "Madison"}, {"id": "snap-22", "name": "Mills River Farmers Market", "category": "snap", "lat": 35.386, "lng": -82.566, "address": "94 School House Rd, Mills River, NC 28759", "dates": "May - October, Saturdays 8am - 12pm", "eligibility": "Snap double bucks", "notes": "$20 so up to $40 in tokens", "programs": "", "contact": "", "website": "https://millsriverfarmmarket.com/our-programs/", "county": "Henderson"}, {"id": "snap-23", "name": "Murphy Farmers Market", "category": "snap", "lat": 35.086233, "lng": -84.037033, "address": "4 Railroad St, Murphy NC 28906", "dates": "Saturdays 9am-1pm", "eligibility": "Snap double bucks", "notes": "$20 so up to $40 in tokens", "programs": "", "contact": "", "website": "https://www.townofmurphync.com/main-street-murphy/page/murphy-farmers-market-1", "county": "Cherokee"}, {"id": "snap-24", "name": "Rutherford BARN, Rutherford County Farmers Market", "category": "snap", "lat": 35.334, "lng": -81.865, "address": "172 Park Square, Forest City, NC, 28043", "dates": "Winter Market November - March Saturday 10:00-2:00 Summer Market April-October 8:00-12:00", "eligibility": "Snap double bucks", "notes": "$20 so up to $40 in tokens", "programs": "", "contact": "", "website": "", "county": "Rutherford"}, {"id": "snap-25", "name": "TRACTOR Food & Farms", "category": "snap", "lat": 35.914, "lng": -82.293, "address": "54 Ferguson Hill Rd., Burnsville, NC, 28714", "dates": "March -December, Monday-Friday 8:30am-5:00pm", "eligibility": "Snap double bucks", "notes": "$20 so up to $40 in tokens", "programs": "", "contact": "", "website": "https://tractorfoodandfarms.com/", "county": "Yancey"}, {"id": "snap-26", "name": "Transylvania Farmers Market", "category": "snap", "lat": 35.233, "lng": -82.734, "address": "200 East Main St., Brevard, NC, 28712", "dates": "April-Nov, Saturdays, 9am-12pm; Dec-March, Saturdays, 10am-12pm", "eligibility": "Snap double bucks", "notes": "$20 so up to $40 in tokens", "programs": "", "contact": "", "website": "", "county": "Transylvania"}, {"id": "snap-27", "name": "Saluda Tailgate Market", "category": "snap", "lat": 35.23582, "lng": -82.345175, "address": "Saluda Elementary School, 214 E. Main Street, Saluda, NC.", "dates": "early May through late October. Friday\u2019s 4:00pm to 6:00pm", "eligibility": "Snap double bucks", "notes": "$20 so up to $40 in tokens", "programs": "", "contact": "", "website": "https://saluda.com/?s=farmers+market", "county": "Polk"}, {"id": "clinic-1", "name": "ABCCM Medical Ministry", "category": "clinic", "lat": 35.473176, "lng": -82.580535, "address": "1845 Brevard Rd., Arden, NC 28704", "dates": "Monday-Friday 9 AM\u20135 PM", "eligibility": "1. Be a resident of Buncombe County 2. Be without Health Insurance (this includes Private Insurance, Medicaid, Medicare or VA) 3. Pharmacy assistance may be available for underinsured individuals 4. Gross Income is below 250% of the Federal Poverty Level", "notes": "Free", "programs": "", "contact": "", "website": "https://abccm.org/", "county": "Transylvania"}, {"id": "clinic-2", "name": "Alliance Medical Ministry", "category": "clinic", "lat": 35.782278, "lng": -78.591878, "address": "101 Donald Ross Dr., Raleigh, NC 27610", "dates": "Monday- Thursday: 8:30 AM-4:00 PM Friday: 8:00 AM \u2013 12:00 PM Closed on holidays", "eligibility": "1. 18 years or older 2. Resident of Wake County 3. No health insurance 4. No Medicaid or Medicare 5. Employed or live with a family member who is employed", "notes": "Lots of required documnts: reference website", "programs": "", "contact": "", "website": "https://alliancemedicalministry.org/", "county": "Wake"}, {"id": "clinic-3", "name": "Blue Ridge Free Dental Clinic", "category": "clinic", "lat": 35.114216, "lng": -83.097746, "address": "130 Highway 64 East, Cashiers, NC 28717", "dates": "Patients by appointment only, on a first come, first served basis, with priority given to emergencies. Please call (828) 743-3393 to begin the intake process. take your call Monday through Friday, 9am-3pm.", "eligibility": "residents of Jackson, Macon, Swain, Haywood, and Transylvania counties", "notes": "", "programs": "", "contact": "", "website": "https://brfdc.org/", "county": "Jackson"}, {"id": "clinic-4", "name": "Broad Street Clinic Foundation", "category": "clinic", "lat": 34.732825, "lng": -76.753221, "address": "534 N. 35th St., Suite K, Morehead City, NC 28557", "dates": "Monday\u2013Wednesday 8:30am\u20135pm Thursday 8:30am-4pm. Call:252-726-4562", "eligibility": "Uninsured adult with a low income", "notes": "Lots of required documnts: reference website", "programs": "", "contact": "", "website": "https://broadstreetclinic.org/", "county": "Carteret"}, {"id": "clinic-5", "name": "Camino Clinic", "category": "clinic", "lat": 35.28825, "lng": -80.761589, "address": "133 Stetson Dr., Charlotte, NC 28262", "dates": "Monday-Friday 8A.M - 5P.M", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://camino.org/", "county": "Mecklenburg"}, {"id": "clinic-6", "name": "Caring Community Clinic", "category": "clinic", "lat": 34.766239, "lng": -77.420462, "address": "1210 Hargett St., Jacksonville, NC 28540", "dates": "Monday-Friday 8A.M - 5P.M", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "http://onslowco.org/medical-clinic", "county": "Onslow"}, {"id": "clinic-7", "name": "Chatham CARES Community Pharmacy", "category": "clinic", "lat": 35.723356, "lng": -79.462478, "address": "127 E. Raleigh St., Siler City, NC 27344", "dates": "", "eligibility": "be a Chatham County resident; be uninsured; not be eligible for Medicaid or Medicare Part D; have income at or below 250% of federal poverty guidelines; not be participating in any other drug assistance program; provide photo ID and Social Security card; provide proof of residency (utility bill, banks statement or medical bill); provide proof of income for the household (including pay stubs, copies of income tax forms, copy of social security award letter, or an employer statement regarding patient\u2019s pay); and provide copies of the last two (2) months of bank statements (for any type of bank account).\u200b", "notes": "Apply here https://wp.chathamcares.com/wp-content/uploads/2024/03/2024_CCCP_services_application.pdf", "programs": "", "contact": "", "website": "https://chathamcares.com/", "county": "Chatham"}, {"id": "clinic-8", "name": "Community Care Center - Winston-Salem", "category": "clinic", "lat": 36.105714, "lng": -80.218678, "address": "2135 New Walkertown Rd., Winston-Salem, NC 27101", "dates": "Screening Times: Eligibility screenings are held every Tuesday and Wednesday from 1:00 PM to 3:00 PM. No appointment is needed for the interview. Open:Monday through Thursday from 9:00 AM to 5:00 PM.", "eligibility": "Have lived in Forsyth, Stokes, or Davie Counties for at least the last three months. Not be eligible for state or federal healthcare insurance (including Veterans Administration, Medicaid, or Medicare). Not be eligible for healthcare insurance through your employer. Provide all necessary information and meet our financial guidelines. We aim to make this process as smooth as possible to ensure our resources go to those who need them most.", "notes": "Reference website to know what documents to bring to Interview", "programs": "", "contact": "", "website": "https://carectr.org/", "county": "Forsyth"}, {"id": "clinic-9", "name": "Community Care Clinic of Dare", "category": "clinic", "lat": 35.976956, "lng": -75.648387, "address": "425 Health Center Dr., Nags Head, NC 27959", "dates": "Monday \u2013 Thursday 9 am \u2013 2 pm", "eligibility": "Be 18 years old and older Live or work in Dare County Be uninsured or underinsured Be prepared to show proof of income", "notes": "Charge an annual Patient Administrative Processing Fee, based on your income.", "programs": "", "contact": "", "website": "https://dareclinic.org/", "county": "Dare"}, {"id": "clinic-10", "name": "Community Care Clinic of Franklin", "category": "clinic", "lat": 35.184501, "lng": -83.377391, "address": "121 Riverview St., Franklin, NC 28734", "dates": "Monday, Tuesday, Thursday: 9am-4pm Wednesday: 10am-7pm Friday: 9am-1pm (Telehealth Only) (By Appointment Only)", "eligibility": "Contact to find out", "notes": "(Walk-ins available only for Established Patient's)", "programs": "", "contact": "", "website": "https://communitycareclinicfranklinnc.org/", "county": "Macon"}, {"id": "clinic-11", "name": "Community Care Clinic of Highland-Cashiers", "category": "clinic", "lat": 35.087609, "lng": -83.192861, "address": "52 Aunt Dora Dr., Highlands, NC 28741", "dates": "Clinic Hours: Tuesdays & Thursdays 1:00pm - 4:30pm: Urgent Care Walk-Ins 4:30pm - 9:00pm: By Appointment Only Office Hours: Monday through Friday 10:00am - 5:00pm", "eligibility": "Uninsured, meaning the patient cannot have health insurance or be the beneficiary of other programs that pay for health care, and The family income must also be at or under 250% of the Federal Poverty Guidelines.", "notes": "100% free", "programs": "", "contact": "", "website": "https://highlandscashiersclinic.org/", "county": "Macon"}, {"id": "clinic-12", "name": "Community Care Clinic of Rowan County", "category": "clinic", "lat": 35.678696, "lng": -80.471815, "address": "315G Mocksville Ave., Salisbury, NC 28144", "dates": "Clinic Hours Open Monday - Thursday: 8am-4:30pm Closed for lunch: 12pm-1pm Closed Friday Pharmacy Hours Open Tuesday - Thursday: 9am-4:00pm Closed for lunch: 12pm-1pm Closed Friday", "eligibility": "uninsured Rowan County adults.", "notes": "Free Primary Medical Care, Dental Care, and Pharmacy Services", "programs": "", "contact": "", "website": "https://communitycareofrowan.org/", "county": "Rowan"}, {"id": "clinic-13", "name": "Community Clinic of High Point", "category": "clinic", "lat": 35.961343, "lng": -80.017269, "address": "779 N. Main St., High Point, NC 27262", "dates": "Clinic Hours Mon-Wed; 8:30am-12pm; 1:30pm-5pm Thurs; 8:30am-12pm. Call to schedual an appointment", "eligibility": "adults who cannot afford health insurance & do not qualify for Medicare or Medicaid in the Greater High Point area.", "notes": "", "programs": "", "contact": "", "website": "https://cchpnc.com/", "county": "Guilford"}, {"id": "clinic-14", "name": "Community Free Clinic", "category": "clinic", "lat": 35.443727, "lng": -80.599727, "address": "528-A Lake Concord Rd. NE, Concord, NC 28025", "dates": "Clinic Hours Monday - Thursday: 8:00 am - 5:00 pm 2nd Wednesday: 6:00 pm - 8:00 pm Closed Friday - Sunday", "eligibility": "You may qualify if you live in Cabarrus County, are uninsured, and your household income is at or below 300% of the Federal Poverty Level. You also must not qualify for Medicare, Medicaid, or VA benefits.", "notes": "free primary medical care", "programs": "", "contact": "", "website": "https://www.communityfreeclinic.org/get-care", "county": "Cabarrus"}, {"id": "clinic-15", "name": "Community Health Services of Union County", "category": "clinic", "lat": 34.970063, "lng": -80.525381, "address": "1338-C E. Sunset Dr., Monroe, NC 28112", "dates": "Monday- Thursday 8:30 AM\u20134:30 PM", "eligibility": "Union County (NC), Anson County (NC), Lancaster (SC) & Chesterfield (SC) uninsured adult residents.", "notes": "", "programs": "", "contact": "", "website": "https://chsuc.org/", "county": "Union"}, {"id": "clinic-16", "name": "Cook Community Clinic", "category": "clinic", "lat": 35.419034, "lng": -80.855415, "address": "14230 Hunters Rd., Huntersville, NC 28078", "dates": "Monday: 8:00 am \u2013 5:00 pm Tuesday: 8:00 am \u2013 5:00 pm Wednesday: 11:30 am \u2013 7:30 pm Thursday: 8:00 am \u2013 5:00 pm Friday: 8:00 am \u2013 noon", "eligibility": "Are uninsured Reside in Mecklenburg County or the southern section of Iredell County (zip codes 28115 and 28117) Earn up to 250% of the federal poverty level as a household", "notes": "Eligibility screening appointments are available: Tuesday and Thursday: 8 am \u2013 4 pm Wednesday: 11:30 am \u2013 4:30 pm", "programs": "", "contact": "", "website": "https://cookcommunityclinic.org/", "county": "Mecklenburg"}, {"id": "clinic-17", "name": "Crisis Control Ministry Pharmacy", "category": "clinic", "lat": 36.106415, "lng": -80.243034, "address": "200 E. Tenth St., Winston-Salem, NC 27101", "dates": "Monday \u2013 Friday: 9:00 a.m. - Noon and 1:00 p.m. - 4:00 p.m.", "eligibility": "Residents of Forsyth and Stokes Counties People who do not have health insurance with prescription coverage or are underinsured People in need of prescription medications that cannot afford them Medicaid members", "notes": "", "programs": "", "contact": "", "website": "https://crisiscontrol.org/", "county": "Forsyth"}, {"id": "clinic-18", "name": "DEAC Clinic", "category": "clinic", "lat": 36.111194, "lng": -80.215325, "address": "2295 14th St. NE, Winston-Salem, NC 27105", "dates": "Mon: 5:30 pm \u2013 9 pm", "eligibility": "Have an income within 200% of the Federal Poverty Guidelines Not have medical coverage of any kind, and Be a resident of Forsyth, Stokes, Davie, Davidson or Yadkin county (for at least 90 days)", "notes": "", "programs": "", "contact": "", "website": "https://www.wakehealth.edu/locations/clinics/d/deac-delivering-equal-access-to-care-clinic", "county": "Forsyth"}, {"id": "clinic-19", "name": "El Cuerpo Clinic", "category": "clinic", "lat": 34.163335, "lng": -77.912423, "address": "4555 Fairview Dr., Wilmington, NC 28412", "dates": "1st and 3rd Tuesday evening of each month at 5:45 p.m", "eligibility": "Serves adults only with no health insurance (including Medicaid and Medicare) and income less than 250% of the federal poverty level.", "notes": "Appointments are required. Contact 910-508-6554 to make an appointment.", "programs": "", "contact": "", "website": "https://cccwnc.com/ccclinic", "county": "Buncombe"}, {"id": "clinic-20", "name": "Free Clinic of Rockingham County", "category": "clinic", "lat": 36.357631, "lng": -79.665669, "address": "315 S. Main St., Reidsville, NC 27320", "dates": "Monday \u2014 Thursday 8am \u2014 12pm, 1pm-4pm", "eligibility": "Live in Rockingham or Caswell County. Have no health insurance. Be at 250% or below of the federal poverty level for your household size.", "notes": "All clinic appointments must be scheduled in advance. Walk-ins are not accepted.", "programs": "", "contact": "", "website": "https://freeclinicrc.org/", "county": "Rockingham"}, {"id": "clinic-21", "name": "The Free Clinics", "category": "clinic", "lat": 35.292918, "lng": -82.4282, "address": "841 Case St., Hendersonville, NC 28792", "dates": "Medical Clinic Hours: Tuesdays at 4:00pm. Accepts walk-in patients. Thursday and Psychiatric Clinic: 1st & 3rd Tuesdays at 4:00pm. Accepts walk-in patients and appointments.", "eligibility": "Live in Henderson or Polk County Have no insurance, including no Medicaid, no Medicare, and no Veterans benefits Have monthly income that is at or below 300% of the federal poverty level, meaning that (in 2024) a single person earns $3,765 per month before taxes. For a family of four, the monthly income would be $7,800 or less before taxes. (2024) Provide all necessary information and financial documentation.", "notes": "", "programs": "", "contact": "", "website": "https://www.thefreeclinics.org/", "county": "Henderson"}, {"id": "clinic-22", "name": "Good Samaritan Clinic", "category": "clinic", "lat": 35.72953, "lng": -81.6539, "address": "500 E. Parker Rd., Morganton, NC 28655", "dates": "Monday- Thursday 8:30 AM\u20135:30 PM", "eligibility": "Are you a resident of Burke County, NC?* Are you uninsured or under-insured?** Are you between the ages of 18-64? Is your household income less than 250% of the Federal Poverty Level?", "notes": "", "programs": "", "contact": "", "website": "https://www.gscburke.org/", "county": "Burke"}, {"id": "clinic-23", "name": "Greater Hickory CCM Medical Ministries", "category": "clinic", "lat": 35.730947, "lng": -81.337023, "address": "31 1st Ave. SE, Hickory, NC 28602", "dates": "Monday\u2013Thursday (8:00 AM\u20134:30 PM) and Friday (8:00 AM\u2013Noon, by appointment)", "eligibility": "must be adults 18 and over, a resident of Catawba or Alexander County, and fall within 300% of federal poverty guidelines. Individuals must also be uninsured and ineligible for Medicaid. Some limited services will be available to residents in the surrounding counties on a case-by-case basis.", "notes": "", "programs": "", "contact": "", "website": "https://ccmhickory.org/", "county": "Catawba"}, {"id": "clinic-24", "name": "Hands of Hope Medical Clinic", "category": "clinic", "lat": 36.12321, "lng": -80.664449, "address": "320-A W. Maple St., Yadkinville, NC 27055", "dates": "Monday 8 AM\u20134:30 PM Tuesday 8 AM\u20136 PM Wednesday 9 AM\u20134:30 PM", "eligibility": "Yadkin County Citizens between the ages of 18-64 without medical insurance, Medicaid, Medicare or disability.", "notes": "", "programs": "", "contact": "", "website": "https://hohclinic.org/", "county": "Yadkin"}, {"id": "clinic-25", "name": "HealthNet Albemarle", "category": "clinic", "lat": 36.311157, "lng": -76.221626, "address": "918 Greenleaf St., Elizabeth City, NC 27909", "dates": "Monday \u2013 Thursday 8:00am \u2013 4:00pm", "eligibility": "Be 18 years old or older; Live or work in the following counties: Camden, Chowan, Currituck, Dare, Gates, Hertford, Pasquotank, Perquimans; Be uninsured or underinsured; Those awaiting approval for assistance programs (Medicaid, Medicare, etc.) may be eligible for short-term services in the case of immediate need; Have household income less than the limits* shown here. No one will be denied access to services due to inability to pay. Our discounted fee schedule is based on family size and income.", "notes": "", "programs": "", "contact": "", "website": "https://hnalbemarle.com/", "county": "Pasquotank"}, {"id": "clinic-26", "name": "HealthQuest of Union County", "category": "clinic", "lat": 34.981158, "lng": -80.54136, "address": "415 E. Franklin St., Monroe, NC 28112", "dates": "Monday- Thursday 8 AM\u20134:30 PM", "eligibility": "Residents of Union, Anson, and Stanly Counties in NC as well as Chesterfield and Lancaster Counties in SC, who meet our income and eligibility requirements are able to receive medications from HealthQuest.", "notes": "", "programs": "", "contact": "", "website": "https://healthquestpharmacy.org/", "county": "Macon"}, {"id": "clinic-27", "name": "HealthReach Community Clinic", "category": "clinic", "lat": 35.580755, "lng": -80.803931, "address": "400 E. Statesville Ave., Suite 300, Mooresville, NC 28115", "dates": "Monday: 9:00 AM - 4:00 PM Tuesday: 12:00 PM - 7:30 PM Wednesday: 9:00 AM - 4:00 PM Thursday: 9:00 AM - 4:00 PM", "eligibility": "Live in Iredell County, NC Have no medical insurance, including Medicaid/Medicare (Medicaid coverage for Family Planning only would NOT automatically disqualify an applicant) Be between the ages of 18 and 65 Make less than 300% of the Federal Poverty Guidelines (see chart below)", "notes": "", "programs": "", "contact": "", "website": "https://healthreachclinic.org/", "county": "Iredell"}, {"id": "clinic-28", "name": "Helping Hand Clinic - Sanford", "category": "clinic", "lat": 35.478584, "lng": -79.182736, "address": "409 Carthage St., Sanford, NC 27330", "dates": "Mon08:30 am \u2013 12:30 pm Tue 08:30 am \u2013 12:30 pm Wed08:30 am \u2013 08:00 pm Thu08:30 am \u2013 12:30 pm Fri10:30 am \u2013 01:00 pm", "eligibility": "underserved and uninsured and underinsured Lee and Harnett County residents", "notes": "", "programs": "", "contact": "", "website": "https://hhcsanford.com/", "county": "Lee"}, {"id": "clinic-29", "name": "Helping Hands Clinic of Caldwell County", "category": "clinic", "lat": 35.913716, "lng": -81.539625, "address": "810 Harper Ave. NW, Lenoir, NC 28645", "dates": "Monday- Thursday 8:00am to 5:00pm. Closed for Lunch 12:30pm to 1:30pm", "eligibility": "Uninsured", "notes": "", "programs": "", "contact": "", "website": "https://helpinghandsclinic.org/", "county": "Caldwell"}, {"id": "clinic-30", "name": "HOPE Clinic", "category": "clinic", "lat": 35.143977, "lng": -76.791376, "address": "203 North St., Bayboro, NC 28515", "dates": "Monday - Thursday 9am-4pm Friday - 9am-12pm", "eligibility": "adults in Pamlico, Craven, and Beaufort Counties who are uninsured or underinsured and do not have access to affordable healthcare. Patients may qualify with household income up to 300% of the Federal Poverty Level and are not eligible for Medicaid.", "notes": "", "programs": "", "contact": "", "website": "https://www.hopeclinic.net/", "county": "Pamlico"}, {"id": "clinic-31", "name": "Hope Community Clinic - FNA Smith Family", "category": "clinic", "lat": 35.192095, "lng": -80.761141, "address": "3646 Central Ave., Charlotte, NC 28205", "dates": "Medical Clinic Appointments By Appointment Only Mon-Thurs: \u200b9 AM \u2013 4:30 PM Fridays: \u200b9 AM \u2013 11:30 AM", "eligibility": "uninsured or underinsured", "notes": "", "programs": "", "contact": "", "website": "https://hopeeastclt.com/", "county": "Mecklenburg"}, {"id": "clinic-32", "name": "Hunger & Health Coalition, Inc.", "category": "clinic", "lat": 36.214553, "lng": -81.64087, "address": "141 Health Center Dr., Suite B, Boone, NC 28607", "dates": "Medicine is distributed Monday through Friday from 9 am - 4 pm.", "eligibility": "income and assets at or below 200% of the Federal Poverty Level", "notes": "", "programs": "", "contact": "", "website": "https://hungerandhealthcoalition.com/", "county": "Watauga"}, {"id": "clinic-33", "name": "John P. Murray Community Care Clinic", "category": "clinic", "lat": 35.364145, "lng": -80.193007, "address": "303 Yadkin St., Albemarle, NC 28001", "dates": "Monday - Thursday 8:00 AM -5:00 PM Closed 12:00 PM to 1:00 PM", "eligibility": "Patients must be a resident of Stanly County between the ages of 18 and 64 years old to qualify for the clinic. They must not have any private insurance, Medicare or Medicaid. They may not be eligible for veterans services. Total household income of 250% of the federal poverty guidelines or less.", "notes": "By appointment only", "programs": "", "contact": "", "website": "https://communitycareclinicalbemarle.org/", "county": "Stanly"}, {"id": "clinic-34", "name": "Mariam Clinic", "category": "clinic", "lat": 35.781948, "lng": -78.809435, "address": "1021 Darrington Dr., Ste 101, Cary, NC 27513", "dates": "SUNDAYS from 11:00am to 5:00 pm by appointment only - no walk ins are accepted.", "eligibility": "Ages 18 and above Must not qualify for public or private insurance (i.e. Medicaid, Medicare, NC Health Choice, Disablity or Veterans\u2019 Benefits). Permanent Resident of Wake County. Household income no more than 200% of the poverty level", "notes": "", "programs": "", "contact": "", "website": "https://www.mariamclinic.org/", "county": "Wake"}, {"id": "clinic-35", "name": "McAdams Free Clinic", "category": "clinic", "lat": 35.114798, "lng": -80.724311, "address": "196 S. Trade St., Matthews, NC 28105", "dates": "Mon to Thur 8:30AM \u2013 4:00PM Fri 8:30AM \u2013 1:00PM All Visits are by appointment only", "eligibility": "Live anywhere in Mecklenburg, Union, Gaston, Lincoln, and Cleveland counties in NC Be 14-64 years old Not have Medicaid (Family Planning Medicaid does not disqualify), Medicare, VA, Marketplace insurance, or private insurance Be at or below 300% of the current year\u2019s Federal Poverty Guidelines (click HERE to be redirected to the federal poverty level chart).", "notes": "", "programs": "", "contact": "", "website": "https://matthewsfmc.org/", "county": "Mecklenburg"}, {"id": "clinic-36", "name": "MERCI Clinic", "category": "clinic", "lat": 35.111278, "lng": -77.068808, "address": "1315 Tatum Dr., New Bern, NC 28560", "dates": "Monday- Wednesday, Friday 8:30 AM\u20134:30 PM. Thursday 10:30 AM\u20136 PM", "eligibility": "adults who are without medical or dental insurance.", "notes": "", "programs": "", "contact": "", "website": "https://merciclinic.org/", "county": "Craven"}, {"id": "clinic-37", "name": "Moore Free and Charitable Care Clinic", "category": "clinic", "lat": 35.193317, "lng": -79.379404, "address": "211 Trimble Plant Rd., Suite C, Southern Pines, NC 28387", "dates": "Monday, Wednesday & Thursday 8:30 a.m. - 5:00 p.m. Tuesday 8:30 a.m. - 7:00 p.m. Friday 8:30 a.m. - 3:00 p.m.", "eligibility": "Patients must be residents of the Moore County, NC. Patients must not have or be eligible for any public or private health insurance coverage. Patients must have verified income equal to or less than 300% of federal poverty levels (see chart below).", "notes": "", "programs": "", "contact": "", "website": "https://moorefreecare.org/", "county": "Moore"}, {"id": "clinic-38", "name": "Mountain Strong Free Clinic", "category": "clinic", "lat": 35.912291, "lng": -82.321597, "address": "371 W US Hwy 19, Burnsville, NC 28714", "dates": "appointment only.", "eligibility": "adults, teens, and families in Yancey and Mitchell Counties.", "notes": "", "programs": "", "contact": "", "website": "https://mountainstrong828.com/", "county": "Yancey"}, {"id": "clinic-39", "name": "Mustard Seed Community Health", "category": "clinic", "lat": 36.072067, "lng": -79.758225, "address": "238 S. English St., Greensboro, NC 27401", "dates": "Appointment only The clinic closes every day from 1:00pm to 2:00pm for lunch. Mondays - 8:30 AM to 5:00 PM Tuesdays - 8:30 AM to 5:00 PM Wednesdays 10:00 AM to 7:00 PM Thursdays - 8:30 AM to 5:00 PM Fridays - 8:30 AM to 5:00 PM", "eligibility": "Guilford County, are uninsured or underinsured, and make 200% or less of the Federal Poverty Level", "notes": "", "programs": "", "contact": "", "website": "https://mustardseedhealth.org/", "county": "Guilford"}, {"id": "clinic-40", "name": "NC MedAssist", "category": "clinic", "lat": 35.228728, "lng": -80.920611, "address": "4428 Taggart Creek Rd., Suite 101, Charlotte, NC 28208", "dates": "Monday- Friday from 8:00 AM to 4:30 PM", "eligibility": "Live in North Carolina No health insurance. (We may be able to help some Medicare patients on a case-by-case basis.) Have Income 300% of the Federal Poverty Level.", "notes": "", "programs": "", "contact": "", "website": "https://medassist.org/", "county": "Mecklenburg"}, {"id": "clinic-41", "name": "Open Door Clinic of Alamance County", "category": "clinic", "lat": 36.101, "lng": -79.403145, "address": "424 Rudd St., Suite 102, Burlington, NC 27217", "dates": "Tuesday: 9:00am \u2013 4:00pm Wednesday: 9:00am \u2013 2:00pm (Virtual clinic appointments for insured only) Thursday: 9:00am \u2013 8:00pm Friday: By Appointment Only", "eligibility": "18 years of age or older, gross 250% at or below the Federal Poverty Guidelines based on your household income and be an Alamance County resident.", "notes": "", "programs": "", "contact": "", "website": "https://opendoorclinic.net/", "county": "Alamance"}, {"id": "clinic-42", "name": "Pitt County Care Clinic", "category": "clinic", "lat": 35.636936, "lng": -77.363401, "address": "201 Government Circle, Greenville, NC 27834", "dates": "Every Other Sunday 12:00PM (first come first serve)", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://facebook.com/PittCountyCareClinic", "county": "Pitt"}, {"id": "clinic-43", "name": "Samaritan Health Center", "category": "clinic", "lat": 35.967639, "lng": -78.94178, "address": "3205 University Dr., Suite 107, Durham, NC 27707", "dates": "Monday: 12:00 PM \u2013 5:00 PM Tuesday: 10:00 AM \u2013 8:00 PM Wednesday: 9:00 AM \u2013 5:00 PM Thursday: 9:00 AM \u2013 2:00 PM and 5:30 PM \u2013 8:30 PM Friday: 9:00 AM \u2013 1:00 PM", "eligibility": "Do not qualify for Medicaid, household income less then 300% of Federal Poverty Guidelines, No health insurance", "notes": "Make appointment", "programs": "", "contact": "", "website": "https://samaritanhealthcenter.org/", "county": "Durham"}, {"id": "clinic-44", "name": "Shalom Project", "category": "clinic", "lat": 36.103665, "lng": -80.248865, "address": "639 Green St. South, Winston-Salem, NC (NCAFCC address)", "dates": "Tuesdays 10:30am-12pm *Appointment only Wednesdays 4:30-6:30pm **Walk-in and appointments", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://theshalomprojectnc.org/", "county": "Forsyth"}, {"id": "clinic-45", "name": "Student Health Action Coalition - SHAC", "category": "clinic", "lat": 35.913042, "lng": -79.069817, "address": "301 Lloyd St., Carrboro, NC 27510", "dates": "every Wednesday from 6:00PM to 10:00PM (make appointment)", "eligibility": "uninsured and underinsured neighbors in Carrboro, Chapel Hill and Durham", "notes": "", "programs": "", "contact": "", "website": "https://www.med.unc.edu/shac/", "county": "Orange"}, {"id": "clinic-46", "name": "SVCM NeighborCare Clinic", "category": "clinic", "lat": 35.816655, "lng": -78.705966, "address": "101 N Ridgeway Ave., Black Mountain, NC 28711", "dates": "Wednesdays 9am - 12 noon", "eligibility": "underserved communities in the Swannanoa Valley and beyond", "notes": "Takes walk ins", "programs": "", "contact": "", "website": "https://www.svcmblackmountain.org/svcm-neighborcare-clinic", "county": "Buncombe"}, {"id": "clinic-47", "name": "The CARE Clinic Inc", "category": "clinic", "lat": 35.051795, "lng": -78.888078, "address": "239 Robeson St., Fayetteville, NC 28301", "dates": "Medical clinics are every Tuesday and Thursday and the 2nd and 4th Wednesday of each month. Dental clinics are every Tuesday and 2nd & 4th Wednesday.", "eligibility": "someone you know needs medical or dental care and does not have insurance", "notes": "", "programs": "", "contact": "", "website": "https://www.thecareclinic.org/", "county": "Cumberland"}, {"id": "clinic-48", "name": "Urban Ministries Open Door Clinic", "category": "clinic", "lat": 35.79945, "lng": -78.634937, "address": "1390 Capital Blvd., Raleigh, NC 27603", "dates": "Monday & Thursday: 9 am\u20135 pm Tuesday & Wednesday: 9 am\u20136:30 pm Friday: closed", "eligibility": "uninsured adults", "notes": "", "programs": "", "contact": "", "website": "https://nafcclinics.org/locations/urban-ministries-open-door-clinic/", "county": "Wake"}, {"id": "clinic-49", "name": "Vecinos", "category": "clinic", "lat": 35.305702, "lng": -83.202497, "address": "3971 Little Savannah Rd., Cullowhee, NC 28723", "dates": "Tuesday, Wednesday, Thursday: 10 am to 9 pm", "eligibility": "1. Family Household is at or below 250% of the federal poverty level. 2. The patient has no health insurance, is under-insured, or has no reasonable access to healthcare. 3. Must be at least 18 years old. 4. Vecinos must be the only place the patient is receiving primary healthcare in the region.", "notes": "", "programs": "", "contact": "", "website": "https://vecinos.org/", "county": "Jackson"}, {"id": "clinic-50", "name": "Rupert Bell Neighborhood Center", "category": "clinic", "lat": 36.10430635526691, "lng": -80.2265803990801, "address": "1501 Mt Zion Pl, Winston-Salem, NC 27101", "dates": "Thuresday 9:30 am - 5 pm Clinic closed for lunch 12 - 1 pm", "eligibility": "uninsured adolescents and adults", "notes": "", "programs": "", "contact": "", "website": "https://www.wakehealth.edu/locations/clinics/m/mobile-health-clinic", "county": "Forsyth"}, {"id": "clinic-51", "name": "Carl H Russell Community Center", "category": "clinic", "lat": 36.1327983479174, "lng": -80.20742331647308, "address": "3521 Carver School Rd Winston-Salem, NC 27105", "dates": "12:30 - 5 pm", "eligibility": "uninsured adolescents and adults", "notes": "", "programs": "", "contact": "", "website": "https://www.wakehealth.edu/locations/clinics/m/mobile-health-clinic", "county": "Forsyth"}, {"id": "clinic-52", "name": "Iglesia Cristiana Sin Fronteras", "category": "clinic", "lat": 36.17030593055646, "lng": -80.2957153897102, "address": "5490 Shattalon Dr Winston-Salem, NC 27106", "dates": "9 am - 5 pm Clinic closed for lunch 12 - 1 pm", "eligibility": "uninsured adolescents and adults", "notes": "", "programs": "", "contact": "", "website": "https://www.wakehealth.edu/locations/clinics/m/mobile-health-clinic", "county": "Forsyth"}, {"id": "clinic-53", "name": "St. Peter\u2019s World Outreach Center", "category": "clinic", "lat": 36.05022735579199, "lng": -80.22143039182144, "address": "3683 Old Lexington Rd Winston-Salem, NC 27107", "dates": "9 am - 5 pm Clinic closed for lunch 12 - 1 pm", "eligibility": "uninsured adolescents and adults", "notes": "", "programs": "", "contact": "", "website": "https://www.wakehealth.edu/locations/clinics/m/mobile-health-clinic", "county": "Forsyth"}, {"id": "clinic-54", "name": "Wake Smiles", "category": "clinic", "lat": 35.806881, "lng": -78.616777, "address": "1863 Capital Blvd., Raleigh, NC 27604", "dates": "Appointment only", "eligibility": "uninsured Wake County resident who meets income requirements and be referred by one of our participating agencies.", "notes": "", "programs": "", "contact": "", "website": "https://wakesmiles.org/become-a-patient/", "county": "Wake"}, {"id": "pantry-1", "name": "Thermal Belt Outreach", "category": "pantry", "lat": 35.251141, "lng": -82.204048, "address": "134 White Drive Columbus, NC 28722", "dates": "Monday/Thursday 9:00 AM - 12:00 PM 1:00 PM - 6:00 PM Tuesday/Wendsday 9:00 AM - 12:00 PM 1:00 PM - 4:00 PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.tboutreach.org/", "county": "Polk"}, {"id": "pantry-2", "name": "Share Thy Bread Ministry - Tryon SDA Church", "category": "pantry", "lat": 35.227398, "lng": -82.237628, "address": "2820 Lynn Road Tryon, NC 28782 828-440-1147", "dates": "Monday, Wednesday, Thursday 9:30 a.m. - 2:30 p.m. Friday 9:30 a.m. - 12:30 p.m.", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.sharethybread.org/", "county": "Polk"}, {"id": "pantry-3", "name": "Berean SDA Community Center", "category": "pantry", "lat": 35.248639, "lng": -80.843668, "address": "1801 Double Oaks Rd, Charlotte, NC 28206", "dates": "Every Tuesday 9:00 am\u201310:00 am", "eligibility": "", "notes": "ID required Registration required", "programs": "", "contact": "", "website": "https://www.foodhelpline.org/resources/charlotte-berean-seventh-day-adventist-church-community-center", "county": "Mecklenburg"}, {"id": "pantry-4", "name": "Liberty Baptist Church", "category": "pantry", "lat": 35.252434, "lng": -80.984159, "address": "3000 Sam Wilson Rd, Charlotte, NC 28214", "dates": "Mondays from 9:00 am - 11:30 am", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://libertybaptistchurchcharlotte.com/", "county": "Mecklenburg"}, {"id": "pantry-5", "name": "Catholic Charities", "category": "pantry", "lat": 35.220458, "lng": -80.854395, "address": "1123 S Church St, Charlotte, NC 28203", "dates": "Tuesdays 10:00 AM \u2013 12:00 PM | 1:00 PM \u2013 3:00 PM", "eligibility": "", "notes": "Schedule an appointment https://app.pantrysoft.com/login/CCDOC.", "programs": "", "contact": "", "website": "https://ccdoc.org/food-clothing", "county": "Mecklenburg"}, {"id": "pantry-6", "name": "Catholic Charities", "category": "pantry", "lat": 36.112506948630084, "lng": -80.22478518608264, "address": "1612 14th Street NE, Winston-Salem, NC 27105", "dates": "Thursday 9:00 AM \u2013 12:00 PM", "eligibility": "", "notes": "Schedule an appointment www.ccdoc.org/choice-ws", "programs": "", "contact": "", "website": "https://ccdoc.org/food-clothing", "county": "Forsyth"}, {"id": "pantry-7", "name": "Catholic Charities", "category": "pantry", "lat": 35.60185149801124, "lng": -82.55127807306002, "address": "50 Orange Street, Asheville, NC 28801", "dates": "Wednesday 11:00 AM \u2013 1:00 PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://ccdoc.org/food-clothing", "county": "Buncombe"}, {"id": "pantry-8", "name": "Christ the King Church", "category": "pantry", "lat": 35.097948, "lng": -80.997032, "address": "13501 S Tryon St, Charlotte, NC 28278", "dates": "Wednesday, 5:00\u20136:00PM", "eligibility": "", "notes": "No ID or paperwork is required. First-time visitors will complete a short form in their car.", "programs": "", "contact": "", "website": "https://ctkcharlotte.org/foodpantry/", "county": "Mecklenburg"}, {"id": "pantry-9", "name": "Champion House", "category": "pantry", "lat": 35.294028, "lng": -80.796069, "address": "2230 W Sugar Creek Rd, Charlotte, NC 28262", "dates": "Monday- Thursday, 11am- 2 pm Friday 2 pm- 3:30 pm", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.championhouseofcare.org/events.html", "county": "Mecklenburg"}, {"id": "pantry-10", "name": "Oak Grove Methodist Church", "category": "pantry", "lat": 35.310864, "lng": -80.836912, "address": "6440 Old Statesville Rd, Charlotte, NC 28269", "dates": "Thursday 10:00am and 12:00pm", "eligibility": "", "notes": "No appointment is necessary, however a photo ID is required.", "programs": "", "contact": "", "website": "https://oakgroveofcharlotte.com/disciples-food-pantry/", "county": "Mecklenburg"}, {"id": "pantry-11", "name": "Sacred Souls United Church of Christ", "category": "pantry", "lat": 35.226933, "lng": -80.775122, "address": "2127 Eastway Dr, Charlotte, NC 28205", "dates": "Thursday 9am- 12pm", "eligibility": "", "notes": "If you'd like to make a request for food, please call (980) 301-5863 on or before Wednesday leaving your name and number to schedule your food pick-up.", "programs": "", "contact": "", "website": "https://www.foodhelpline.org/resources/sacred-souls-united-church-of-christ", "county": "Mecklenburg"}, {"id": "pantry-12", "name": "Calvary Nazarene Church", "category": "pantry", "lat": 35.214123, "lng": -80.754789, "address": "4000 N Sharon Amity Rd, Charlotte, NC 28212", "dates": "2nd and 4th Tuesdays of each month from 2-4 p.m.", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "http://charlottecalvary.org/food-pantry", "county": "Mecklenburg"}, {"id": "pantry-13", "name": "Harbor Baptist Church", "category": "pantry", "lat": 35.263133, "lng": -80.769023, "address": "5801 Old Concord Rd, Charlotte, NC 28213", "dates": "Friday 2:00 to 4:00 p.m.", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://harborbaptistchurch.org/connect/", "county": "Mecklenburg"}, {"id": "pantry-14", "name": "Hearts United for Good", "category": "pantry", "lat": 35.221202, "lng": -80.819157, "address": "Charlotte, NC", "dates": "Tuesday: 12:00-3:00PM & 4:00PM - 7:00PM Wednesday: 12:00-3:00PM ONLY Thursday: 12:00-3:00PM & 4:00PM - 7:00PM", "eligibility": "", "notes": "Make appointment https://app.hugclt.org/booking", "programs": "", "contact": "", "website": "", "county": "Mecklenburg"}, {"id": "pantry-15", "name": "Faith CME Church", "category": "pantry", "lat": 35.264992, "lng": -80.786785, "address": "457 Wellingford St, Charlotte, NC 28213", "dates": "Wednesday 5 PM \u2013 6 PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://faithcmechurch.org/", "county": "Mecklenburg"}, {"id": "pantry-16", "name": "Hope Street Food Pantry", "category": "pantry", "lat": 35.365851, "lng": -80.773776, "address": "4100 Johnston Oehler Rd, Charlotte, NC 28269", "dates": "THURSDAYS Hope Street Food Pantry (4\u20137pm). TUESDAYS Library Distribution Sites (Mobile Pantry)", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://hopestreetfoodpantry.com/get-help/", "county": "Mecklenburg"}, {"id": "pantry-17", "name": "Reeder Memorial Baptist Church", "category": "pantry", "lat": 35.284975, "lng": -80.85981, "address": "3713 Beatties Ford Rd, Charlotte, NC 28216", "dates": "Tuesday AND Thursday 10am-1pm ALSO 3pm-5:30pm Thursday 3rd Saturday of each month", "eligibility": "", "notes": "call for appointment", "programs": "", "contact": "", "website": "https://reederministries.org/", "county": "Mecklenburg"}, {"id": "pantry-18", "name": "Pineville Church of the Nazarene", "category": "pantry", "lat": 35.089469, "lng": -80.864547, "address": "8614 Pineville-Matthews Rd, Charlotte, NC 28226", "dates": "2nd and 4th Thursday of each month from 8:30am-12pm", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://pineville.church/", "county": "Mecklenburg"}, {"id": "pantry-19", "name": "If My People Mission Center", "category": "pantry", "lat": 35.253184, "lng": -80.82726, "address": "2511 Lucena St, Charlotte, NC 28206", "dates": "Every Wednesday 1:00 pm", "eligibility": "", "notes": "Need appointment", "programs": "", "contact": "", "website": "https://www.foodhelpline.org/resources/if-my-people-mission-center", "county": "Mecklenburg"}, {"id": "pantry-20", "name": "Kings Church Inc. Outreach", "category": "pantry", "lat": 35.326714, "lng": -80.869056, "address": "7003 Beatties Ford Rd, Charlotte, NC 28216", "dates": "Saturday between 12-1pm", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.kcoutreachinc.com/our-ministries", "county": "Mecklenburg"}, {"id": "pantry-21", "name": "New Shilo Baptist Church", "category": "pantry", "lat": 35.213217, "lng": -80.903946, "address": "2601 Elmin St, Charlotte, NC 28208", "dates": "Food Pantry: Tue & Thu 1pm-4pm; Soup Kitchen: Thu 4pm-8pm", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.newshilohbaptist.org/", "county": "Mecklenburg"}, {"id": "pantry-22", "name": "Silver Mount Baptist Church", "category": "pantry", "lat": 35.13288, "lng": -80.898329, "address": "501 W Arrowood Rd, Charlotte, NC 28217", "dates": "", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "", "county": "Mecklenburg"}, {"id": "pantry-23", "name": "Seventh Day Adventist Hispanic", "category": "pantry", "lat": 35.251806, "lng": -80.738114, "address": "4620 E WT Harris Blvd, Charlotte, NC 28215", "dates": "2:00 pm\u20134:00 pm every week on Monday, Tuesday", "eligibility": "", "notes": "You can visit once a week ID required Proof of address required Registration required Proof of household income required", "programs": "", "contact": "", "website": "https://www.foodhelpline.org/resources/seventh-day-adventist-hispanic-iglesia-adventista-del-s-ptimo-d-a-central-de-charlotte", "county": "Mecklenburg"}, {"id": "pantry-24", "name": "St Paul Baptist Church", "category": "pantry", "lat": 35.230219, "lng": -80.817578, "address": "1401 N Allen St, Charlotte, NC 28205", "dates": "2nd Wednesday of every month from 8:00am to 12:00 pm", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://stpaulbaptist.church/about/community-outreach?view=article&id=170:food-pantry&catid=23", "county": "Mecklenburg"}, {"id": "pantry-25", "name": "Shalom Adonai Church of God", "category": "pantry", "lat": 35.177528, "lng": -80.780121, "address": "1148 N Sharon Amity Rd, Charlotte, NC 28205", "dates": "11:30 am\u201312:30 pm on the 2nd Monday 11:30 am\u201312:30 pm on the 3rd Monday 11:30 am\u201312:30 pm on the 1st Monday", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.foodhelpline.org/resources/shalom-adonai-ministerio-internacional", "county": "Mecklenburg"}, {"id": "pantry-26", "name": "The New Antioch Church", "category": "pantry", "lat": 35.181679, "lng": -80.727642, "address": "8324 Idlewild Rd, Charlotte, NC 28212", "dates": "1:00 pm\u20132:00 pm every week on Tuesday", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.foodhelpline.org/resources/the-new-antioch-church", "county": "Mecklenburg"}, {"id": "pantry-27", "name": "WeCare at Hickory Grove UMC", "category": "pantry", "lat": 35.218429, "lng": -80.723047, "address": "6315 Market St, Charlotte, NC 28215. ?????", "dates": "2nd and 4th Saturday of each month 10:00 am \u2013 12:00 pm", "eligibility": "living in the 28205, 28212, 28215 and 28227 zip code areas.", "notes": "", "programs": "", "contact": "", "website": "https://www.hickorygroveumc.com/wecare-client-facing", "county": "Mecklenburg"}, {"id": "pantry-28", "name": "Roof Above", "category": "pantry", "lat": 35.233847, "lng": -80.832886, "address": "945 N College St, Charlotte, NC 28206", "dates": "Daily lunch (11:15am \u2013 12:15pm)", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.roofabove.org/get-help/", "county": "Mecklenburg"}, {"id": "pantry-29", "name": "The Final Harvest Ministries", "category": "pantry", "lat": 35.237961, "lng": -80.888702, "address": "1200 Alleghany St, Charlotte, NC 28208", "dates": "Monday- Friday : 12:00 PM - 1:00 PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "", "county": "Mecklenburg"}, {"id": "pantry-30", "name": "YMCA Food Market \u2013 Blue Ridge Community Health", "category": "pantry", "lat": 35.349778, "lng": -82.431453, "address": "2579 Chimney Rock Rd, Hendersonville, NC", "dates": "Alternating Tuesdays. Call to confirm.", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "Schedual https://www.ymcawnc.org/programs/community/food-programs", "county": "Henderson"}, {"id": "pantry-31", "name": "YMCA Food Market \u2013 Mills River Park", "category": "pantry", "lat": 35.4318, "lng": -82.5679, "address": "124 Town Center Dr, Mills River, NC", "dates": "Alternating Tuesdays. Call to confirm.", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "Schedual https://www.ymcawnc.org/programs/community/food-programs", "county": "Henderson"}, {"id": "pantry-32", "name": "Calvary Chapel of Asheville", "category": "pantry", "lat": 35.37811, "lng": -82.578027, "address": "5516 Boylston Hwy, Mills River, NC", "dates": "Wednesdays, 10:AM to 2:00PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.hendersoncountync.gov/sites/default/files/fileattachments/health/page/116905/food_distribution_sites_-_english.pdf", "county": "Henderson"}, {"id": "pantry-33", "name": "Hendersonville Seventh-day Adventist Church", "category": "pantry", "lat": 35.370232067219206, "lng": -82.41817750955155, "address": "827 Fruitland Rd, Hendersonville, NC 28792", "dates": "Every other Monday, 3:00PM to 6:00PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.hendersoncountync.gov/sites/default/files/fileattachments/health/page/116905/food_distribution_sites_-_english.pdf", "county": "Henderson"}, {"id": "pantry-34", "name": "East Flat Rock Baptist Church", "category": "pantry", "lat": 35.284668, "lng": -82.423605, "address": "2227 Spartanburg Hwy, East Flat Rock, NC", "dates": "One Saturday each month, Call for Date, 10:30AM- 11:30AM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.hendersoncountync.gov/sites/default/files/fileattachments/health/page/116905/food_distribution_sites_-_english.pdf", "county": "Henderson"}, {"id": "pantry-35", "name": "Calvary Episcopal Church Food Pantry", "category": "pantry", "lat": 35.44283, "lng": -82.504183, "address": "2840 Hendersonville Rd, Fletcher, NC", "dates": "Saturdays 8:00AM to 11:00AM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.hendersoncountync.gov/sites/default/files/fileattachments/health/page/116905/food_distribution_sites_-_english.pdf", "county": "Henderson"}, {"id": "pantry-36", "name": "The Storehouse", "category": "pantry", "lat": 35.283477, "lng": -82.423473, "address": "2313 Spartanburg Hwy East Flat Rock, NC", "dates": "Wednesday - Friday: 9:00 AM - 2:00 PM", "eligibility": "", "notes": "(by appointment only)", "programs": "", "contact": "", "website": "https://www.hendersoncountync.gov/sites/default/files/fileattachments/health/page/116905/food_distribution_sites_-_english.pdf", "county": "Henderson"}, {"id": "pantry-37", "name": "Interfaith Assistance Ministry", "category": "pantry", "lat": 35.336157, "lng": -82.443491, "address": "310 Freeman St, Hendersonville, NC 28792", "dates": "Monday, Tuesday, and Thursday from 9 a.m. to 4 p.m. Wednesdays and Fridays, 9 a.m. - 12:30 p.m.", "eligibility": "", "notes": "If you are requesting financial assistance, please arrive between 9 and 11 a.m. to allow us time to process your request. Go to website for required forms", "programs": "", "contact": "", "website": "https://www.iam-hc.org/", "county": "Henderson"}, {"id": "pantry-38", "name": "Salvation Army", "category": "pantry", "lat": 35.316252, "lng": -82.458188, "address": "239 3rd Ave W, Hendersonville, NC", "dates": "Monday- Friday, 9:00AM- 12:00PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.hendersoncountync.gov/sites/default/files/fileattachments/health/page/116905/food_distribution_sites_-_english.pdf", "county": "Henderson"}, {"id": "pantry-39", "name": "St Paul's Episcopal Community Food Pantry", "category": "pantry", "lat": 35.38302738943411, "lng": -82.35886800116802, "address": "3685 Chimney Rock Rd, Hendersonville, NC 28792", "dates": "Thursdays from 2:00 PM to 6:00 PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.communityfoodpantrync.com/about", "county": "Henderson"}, {"id": "pantry-40", "name": "Trinity of Fairview", "category": "pantry", "lat": 35.487392, "lng": -82.455499, "address": "646 Concord Rd, Fletcher, NC", "dates": "Every Wednesday from 9:00 a.m. - 12:00 p.m.", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.trinityoffairview.com/next-steps", "county": "Henderson"}, {"id": "pantry-41", "name": "Pan De Vida", "category": "pantry", "lat": 35.337958578241924, "lng": -82.5339205220279, "address": "3580 Brevard Rd, Hendersonville, NC", "dates": "Starts Saturday at 10:00 AM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.hendersoncountync.gov/sites/default/files/fileattachments/health/page/116905/food_distribution_sites_-_english.pdf", "county": "Henderson"}, {"id": "pantry-42", "name": "New Beginning Baptist Church", "category": "pantry", "lat": 35.409536, "lng": -82.555839, "address": "29 Marlowe Dr, Mills River, NC", "dates": "1st and 3rd Saturday of each month 9:00am- 11am", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.facebook.com/newbeginningsfoodpantry/", "county": "Henderson"}, {"id": "pantry-43", "name": "Hendersonville Rescue Mission", "category": "pantry", "lat": 35.320515, "lng": -82.457299, "address": "639 Maple St, Hendersonville, NC", "dates": "Soup kitchen (ready-to-eat meals): 12:45 pm Every week on Sunday Soup kitchen (ready-to-eat meals): 6:00 pm Every week on Monday, Tuesday, Wednesday, Thursday, Friday, Saturday Soup kitchen (ready-to-eat meals): 12:15 pm every week on Monday, Tuesday, Wednesday, Thursday, Friday, Saturday Soup kitchen (ready-to-eat meals): 7:30 am every week on Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.foodhelpline.org/resources/hendersonville-rescue-mission", "county": "Henderson"}, {"id": "pantry-44", "name": "Love's Kitchen @ First Baptist", "category": "pantry", "lat": 35.316867, "lng": -82.462719, "address": "312 5th Ave W, Hendersonville, NC", "dates": "Thursday 11:15 AM - 12:15 PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://mannafoodbank.org/", "county": "Henderson"}, {"id": "pantry-45", "name": "Saluda Food Pantry / Saluda Pop-Up Pantry", "category": "pantry", "lat": 35.236758, "lng": -82.34913, "address": "54 Carolina St, Saluda, NC 28773", "dates": "Tuesdays 10:00am \u2013 4:00pm Thursdays 10:00am \u2013 4:00pm Saturdays 10:00am \u2013 1:00pm", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://saludapantry.com/", "county": "Polk"}, {"id": "pantry-46", "name": "Thermal Belt Outreach Ministry", "category": "pantry", "lat": 35.251076, "lng": -82.2039, "address": "134 White Dr, Columbus, NC 28722", "dates": "Monday: 9AM\u201312PM, 1PM\u20136PM Tuesday: 9AM\u201312PM, 1PM\u20134PM Wednesday: 9AM\u201312PM, 1PM\u20134PM Thursday: 9AM\u201312PM, 1PM\u20136PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.tboutreach.org/services/food-assistance/pantry", "county": "Polk"}, {"id": "pantry-47", "name": "Share Thy Bread Ministry \u2013 Tryon SDA", "category": "pantry", "lat": 35.227607, "lng": -82.237638, "address": "2820 Lynn Rd, Tryon, NC 28782", "dates": "Free meals:Monday \u2013 Thursday, 10 a.m. \u2013 2:30 p.m. Friday, 10 a.m. \u2013 12:30 p.m. First Sunday, 10 a.m. \u2013 2:30 p.m. TEFAP Distribution Days: Wednesday 10:00 A.M.-2:30 P.M. Thursday 10:00 A.M.-2:30 P.M. Friday 10:00 A.M.-12:30 P.M.", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://tryonnc.adventistchurch.org/ministries/share-thy-bread/", "county": "Polk"}, {"id": "pantry-48", "name": "Beacon Of Hope Svc", "category": "pantry", "lat": 35.81103535158592, "lng": -82.67348835282691, "address": "120 Cavalry Dr Marshall, NC 28753", "dates": "Monday to Friday 8:00 AM \u2013 4:00 PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "", "county": "Madison"}, {"id": "pantry-49", "name": "ABCCM Downtown Crisis Ministry", "category": "pantry", "lat": 35.59813969186259, "lng": -82.55897409535734, "address": "24 Cumberland Ave, Asheville, NC 28801", "dates": "ABCCM Daily Bread \u2013 Sonrise, located on 1543 Patton Ave. \u2013 Monday \u2013 Thursdays 11:30AM-1PM Hours: Monday \u2013 Friday 8:30 am \u2013 4:30 pm", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.abccm.org/crisis/", "county": "Buncombe"}, {"id": "pantry-50", "name": "ABCCM South Crisis Ministry", "category": "pantry", "lat": 35.462427564039096, "lng": -82.51279187511766, "address": "10 Buck Shoals Rd, Arden, NC 28704", "dates": "ABCCM Daily Bread \u2013 Sonrise, located on 1543 Patton Ave. \u2013 Monday \u2013 Thursdays 11:30AM-1PM Hours: Monday \u2013 Friday 8:30 am \u2013 4:30 pm", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.abccm.org/crisis/", "county": "Buncombe"}, {"id": "pantry-51", "name": "ABCCM Hominy Valley Crisis Ministry", "category": "pantry", "lat": 35.543955068057734, "lng": -82.70705155098129, "address": "1914 Smokey Park Hwy, Candler, NC 28715", "dates": "ABCCM Daily Bread \u2013 Sonrise, located on 1543 Patton Ave. \u2013 Monday \u2013 Thursdays 11:30AM-1PM Hours: Monday \u2013 Friday 8:30 am \u2013 4:30 pm", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.abccm.org/crisis/", "county": "Buncombe"}, {"id": "pantry-52", "name": "ABCCM North Samaritan Crisis Ministry", "category": "pantry", "lat": 35.66468530644201, "lng": -82.58325722297906, "address": "403 Weaverville Hwy, Weaverville, NC 28787", "dates": "ABCCM Daily Bread \u2013 Sonrise, located on 1543 Patton Ave. \u2013 Monday \u2013 Thursdays 11:30AM-1PM Hours: Monday \u2013 Friday 8:30 am \u2013 4:30 pm", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.abccm.org/crisis/", "county": "Buncombe"}, {"id": "pantry-53", "name": "Food Connection", "category": "pantry", "lat": 35.52529194640833, "lng": -82.41121286584801, "address": "Fairview Food Lion 1350 Charlotte Hwy Fairview, NC 28730", "dates": "Tuesdays at 3:00PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://food-connection.org/", "county": "Mecklenburg"}, {"id": "pantry-54", "name": "Food Connection", "category": "pantry", "lat": 35.65545723037917, "lng": -82.69937992716523, "address": "Bell United Methodist Church 17 Mayrand Rd Leicester, NC 28748", "dates": "Wednesdays at 5:00PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://food-connection.org/", "county": "Buncombe"}, {"id": "pantry-55", "name": "Food Connection", "category": "pantry", "lat": 35.556609619053546, "lng": -82.67316375106255, "address": "Francis Asbury United Methodist Church 725 Asbury Rd Candler, NC 28715", "dates": "Thursdays at 3:00PM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://food-connection.org/", "county": "Buncombe"}, {"id": "pantry-56", "name": "Food Connection", "category": "pantry", "lat": 35.682213501098495, "lng": -82.58211563726154, "address": "Victory Fellowship Worship Center 450 Aiken Road Weaverville, NC 28787", "dates": "Fridays at 11:00AM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://food-connection.org/", "county": "Buncombe"}, {"id": "pantry-57", "name": "Food Connection", "category": "pantry", "lat": 35.594763377140914, "lng": -82.4287751838666, "address": "Art Space Charter School 2030 US Hwy 70 Swannanoa, NC 28778", "dates": "Saturdays at 10:00AM", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://food-connection.org/", "county": "Buncombe"}, {"id": "pantry-58", "name": "Hunger and Health Coalition", "category": "pantry", "lat": 36.214553, "lng": -81.64087, "address": "141 Health Center Drive Suite C Boone, North Carolina, 28607", "dates": "fresh produce is available to clients each week. call to get involved", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://www.hungerandhealthcoalition.org/fresh-market", "county": "Watauga"}, {"id": "nup-1", "name": "Camino Pantry", "category": "pantry", "lat": 35.289, "lng": -80.76, "address": "201 Stetson Dr., Charlotte, NC", "dates": "Client choice hybrid pantry; check nourishup.org for current schedule", "eligibility": "", "notes": "Online ordering, in-person pickup", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-2", "name": "Greater Salem Church", "category": "pantry", "lat": 35.245, "lng": -80.93, "address": "5318 Salem Church Rd., Charlotte, NC", "dates": "Check nourishup.org for current schedule", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-3", "name": "Holy Comforter Episcopal Church", "category": "pantry", "lat": 35.19, "lng": -80.85, "address": "2701 Park Rd., Charlotte, NC", "dates": "Recurring, multiple days/week; check nourishup.org for current schedule", "eligibility": "TEFAP eligible: USDA food box, no referral/registration/appointment needed", "notes": "", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-4", "name": "Ascension Lutheran Church", "category": "pantry", "lat": 35.213, "lng": -80.837, "address": "1225 East Morehead St., Charlotte, NC", "dates": "Recurring; check nourishup.org for current schedule", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-5", "name": "First Presbyterian Church", "category": "pantry", "lat": 35.227, "lng": -80.844, "address": "200 West Trade Street, Charlotte, NC", "dates": "Check nourishup.org for current schedule", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-6", "name": "St. Giles Presbyterian Church", "category": "pantry", "lat": 35.163, "lng": -80.834, "address": "2027 Emerywood Dr., Charlotte, NC", "dates": "Check nourishup.org for current schedule", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-7", "name": "Mt. Olive Presbyterian Church", "category": "pantry", "lat": 35.276, "lng": -80.945, "address": "5125 Mt Olive Church Rd, Charlotte, NC", "dates": "Check nourishup.org for current schedule", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-8", "name": "Care Ring Pantry", "category": "pantry", "lat": 35.236, "lng": -80.828, "address": "1514 North Graham St., Charlotte, NC", "dates": "Check nourishup.org for current schedule", "eligibility": "", "notes": "Co-located with Care Ring Clinic", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-9", "name": "Statesville Ave. Presbyterian Church", "category": "pantry", "lat": 35.278, "lng": -80.831, "address": "3435 Nevin Rd., Charlotte, NC", "dates": "Check nourishup.org for current schedule", "eligibility": "TEFAP eligible: USDA food box, no referral/registration/appointment needed", "notes": "", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-10", "name": "Harrison United Methodist Church", "category": "pantry", "lat": 35.084, "lng": -80.883, "address": "15008 Lancaster Hwy, Pineville, NC", "dates": "Check nourishup.org for current schedule", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-11", "name": "Ada Jenkins Center", "category": "pantry", "lat": 35.499, "lng": -80.849, "address": "212 Gamble St., Davidson, NC", "dates": "Check nourishup.org for current schedule", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-12", "name": "Galilee Ministries of East Charlotte", "category": "pantry", "lat": 35.211, "lng": -80.784, "address": "3601 Central Ave., Charlotte, NC", "dates": "Check nourishup.org for current schedule", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-13", "name": "Nations Ford Community Church", "category": "pantry", "lat": 35.153, "lng": -80.885, "address": "5901 Nations Ford Rd., Charlotte, NC", "dates": "Check nourishup.org for current schedule", "eligibility": "", "notes": "", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "nup-14", "name": "Huntersville United Methodist Church", "category": "pantry", "lat": 35.406, "lng": -80.852, "address": "14005 Stumptown Rd, Huntersville, NC", "dates": "Check nourishup.org for current schedule", "eligibility": "TEFAP eligible: USDA food box, no referral/registration/appointment needed", "notes": "", "programs": "", "contact": "", "website": "https://nourishup.org/pantries/", "county": "Mecklenburg"}, {"id": "farm-1", "name": "Russell Brothers Farms", "category": "farm", "lat": 35.263, "lng": -80.539, "address": "13485 Cabarrus Station Road, Midland, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "Grass-fed Black Angus cows, pasture-raised chicken and hogs", "programs": "", "contact": "", "website": "", "county": "Cabarrus"}, {"id": "farm-2", "name": "Urban Gourmet Farms", "category": "farm", "lat": 34.939, "lng": -80.744, "address": "548 Providence Road South, Waxhaw, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "Farm-fresh mushrooms grown in a temperature-controlled facility", "programs": "", "contact": "", "website": "", "county": "Union"}, {"id": "farm-3", "name": "New Town Farms", "category": "farm", "lat": 34.933, "lng": -80.766, "address": "4610 New Town Road, Waxhaw, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "5-acre farm operating since 1990; also a wedding venue", "programs": "", "contact": "", "website": "", "county": "Union"}, {"id": "farm-4", "name": "Boy and Girl Farm", "category": "farm", "lat": 34.941, "lng": -80.78, "address": "7603 Potter Road South, Waxhaw, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "About 10 acres of year-round vegetables; sells at Waxhaw Farmers Market", "programs": "", "contact": "", "website": "", "county": "Union"}, {"id": "farm-5", "name": "Celtic Frost Herb Farm", "category": "farm", "lat": 35.409, "lng": -80.437, "address": "513 Elm St., Locust, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "Organically grown medicinal and culinary herb plants and products", "programs": "", "contact": "", "website": "", "county": "Stanly"}, {"id": "farm-6", "name": "Windcrest Farm", "category": "farm", "lat": 34.985, "lng": -80.549, "address": "518 Greenfield Drive, Monroe, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "USDA-certified organic greenhouse and farm; on-farm classes; 300,000+ heirloom plants grown yearly", "programs": "", "contact": "", "website": "", "county": "Union"}, {"id": "farm-7", "name": "Hodges Family Farm", "category": "farm", "lat": 35.235, "lng": -80.69, "address": "3780 Rocky River Road East, Charlotte, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "100-acre family farm (100+ years); produces meat, produce, eggs", "programs": "", "contact": "", "website": "", "county": "Mecklenburg"}, {"id": "farm-8", "name": "Barbee Farms", "category": "farm", "lat": 35.404, "lng": -80.66, "address": "1000 Shelton Road Northwest, Concord, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "70 acres of vegetables and fruit trees; farm stand on site", "programs": "", "contact": "", "website": "", "county": "Cabarrus"}, {"id": "farm-9", "name": "Renfrow Farms", "category": "farm", "lat": 35.117, "lng": -80.728, "address": "409 W. Charles St., Matthews, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "Family-owned farm harvesting fruits, vegetables, nuts, flowers, and honey", "programs": "", "contact": "", "website": "", "county": "Mecklenburg"}, {"id": "farm-10", "name": "McLawland Farms", "category": "farm", "lat": 35.27, "lng": -80.735, "address": "8632 Reedy Creek Rd, Charlotte, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "U-pick blueberries, flowers, and figs", "programs": "", "contact": "", "website": "", "county": "Mecklenburg"}, {"id": "farm-11", "name": "Mouna Bowa Farms", "category": "farm", "lat": 35.238, "lng": -80.834, "address": "Near Johnson C. Smith University, Charlotte, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "Microfarm growing microgreens, edible flowers, and specialty vegetables on under a fifth of an acre", "programs": "", "contact": "", "website": "", "county": "Mecklenburg"}, {"id": "farm-12", "name": "Adrina Farms", "category": "farm", "lat": 35.245, "lng": -80.803, "address": "Innovation Barn, Charlotte, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "Hydroponic farm inside a 320-sq-ft shipping container; 2,250+ heads of greens per week", "programs": "", "contact": "", "website": "", "county": "Mecklenburg"}, {"id": "farm-13", "name": "Greentree Microgreens", "category": "farm", "lat": 35.213, "lng": -80.831, "address": "ParkTowne Village, Charlotte, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "Family-run organic microfarm; online orders, pickup at Topsail Steamer", "programs": "", "contact": "", "website": "", "county": "Mecklenburg"}, {"id": "farm-14", "name": "Mill Spring Farm Store", "category": "farm", "lat": 35.318, "lng": -82.166, "address": "82 Hwy 9 N., Mill Spring, NC 28756 (APPROX coordinates)", "dates": "Tue-Fri 10am-5/6pm, Sat 10am-3pm", "eligibility": "", "notes": "Farm store carrying produce, meats, eggs, and more from local Polk County farms", "programs": "", "contact": "(828) 894-8028", "website": "", "county": "Polk"}, {"id": "farm-15", "name": "Sweet Water Farm", "category": "farm", "lat": 35.31, "lng": -82.166, "address": "154 NC-9 Hwy S, Mill Spring, NC (APPROX coordinates)", "dates": "", "eligibility": "", "notes": "Homegrown vegetables, berries, and muscadines; woman-owned, new/beginning farmer", "programs": "", "contact": "", "website": "", "county": "Polk"}, {"id": "farm-16", "name": "Headwaters Market Garden", "category": "farm", "lat": 35.3, "lng": -82.2, "address": "Polk County, NC (APPROX coordinates - exact address not published)", "dates": "", "eligibility": "", "notes": "Small regenerative farm growing vegetables using organic, low-till methods; Salad CSA available seasonally", "programs": "", "contact": "", "website": "", "county": "Polk"}, {"id": "farm-17", "name": "Harmon Dairy", "category": "farm", "lat": 35.257, "lng": -82.199, "address": "335 Harmon Dairy Lane Rd, Columbus, NC (APPROX coordinates)", "dates": "Open 9am-4pm (tour days)", "eligibility": "", "notes": "50+ year family dairy farm in Green Creek raising ~60 cows for milking; grass-fed beef available", "programs": "", "contact": "", "website": "", "county": "Polk"}, {"id": "farm-18", "name": "Teacher's Farm", "category": "farm", "lat": 35.325, "lng": -81.96, "address": "2330 Polk County Line Road, Rutherfordton, NC (APPROX coordinates)", "dates": "Sells at Hendersonville Farmer's Market Saturdays, May-October", "eligibility": "Accepts EBT/SNAP, WIC FMNP, Senior FMNP, SNAP Incentives", "notes": "Organic farm growing diversified vegetables and flowers", "programs": "", "contact": "(828) 980-5064", "website": "", "county": "Polk"}];
+
+    function getFavorites() {
+      const raw = localStorage.getItem('favoriteLocations');
+      return raw ? JSON.parse(raw) : [];
+    }
+    function isFavorite(id) { return getFavorites().includes(id); }
+    function toggleFavorite(id) {
+      let favs = getFavorites();
+      favs = favs.includes(id) ? favs.filter(f => f !== id) : [...favs, id];
+      localStorage.setItem('favoriteLocations', JSON.stringify(favs));
+      applyFilters();
+      if (document.getElementById('favorites').style.display === 'block') {
+        renderFavoritesPage();
+      }
+    }
+
+    function buildPopupHtml(loc, openNow) {
+      const heart = isFavorite(loc.id) ? '&#9829;' : '&#9825;';
+      let html = `<div class="popup-title"><b>${loc.name}</b>
+        <button class="popup-fav-btn" onclick="toggleFavorite('${loc.id}')" title="Favorite this location">${heart}</button>
+      </div>`;
+      if (openNow) html += `<div class="popup-row" style="color:#b8860b;"><b>&#9679; Open now</b> (based on posted hours)</div>`;
+      if (loc.address) html += `<div class="popup-row"><b>Address:</b> ${loc.address}</div>`;
+      if (loc.county && loc.county !== 'Unknown') html += `<div class="popup-row"><b>County:</b> ${loc.county}</div>`;
+      if (loc.dates) html += `<div class="popup-row"><b>Dates/Hours:</b> ${loc.dates}</div>`;
+      if (loc.eligibility) html += `<div class="popup-row"><b>Eligibility:</b> ${loc.eligibility}</div>`;
+      if (loc.notes) html += `<div class="popup-row"><b>Details:</b> ${loc.notes}</div>`;
+      if (loc.programs) html += `<div class="popup-row"><b>Additional Programs:</b> ${loc.programs}</div>`;
+      if (loc.contact) html += `<div class="popup-row"><b>Contact:</b> ${loc.contact}</div>`;
+
+      const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`;
+      html += `<a class="popup-link" href="${directionsUrl}" target="_blank">Get Directions</a>`;
+      if (loc.website) html += `<a class="popup-link" href="${loc.website}" target="_blank">Website</a>`;
+      return html;
+    }
+
+    // --- Best-effort "open now" detection ---
+    // Parses free-text hours like "Monday-Friday 9am-5pm" or "Saturdays 8am-1pm".
+    // Irregular schedules ("1st and 3rd Sunday", "by appointment only", etc.)
+    // can't be reliably parsed, so those locations simply won't get a ring
+    // rather than risk showing a wrong answer.
+    const DAY_ABBR = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+    function parseDaysFromText(text) {
+      const lower = text.toLowerCase();
+      const found = new Set();
+
+      // Ranges like "Monday-Friday" or "Mon-Thu"
+      const rangeRegex = /(sun|mon|tue|wed|thu|fri|sat)[a-z]*\s*-\s*(sun|mon|tue|wed|thu|fri|sat)[a-z]*/g;
+      let m;
+      while ((m = rangeRegex.exec(lower)) !== null) {
+        const startIdx = DAY_ABBR.indexOf(m[1]);
+        const endIdx = DAY_ABBR.indexOf(m[2]);
+        if (startIdx !== -1 && endIdx !== -1) {
+          if (startIdx <= endIdx) {
+            for (let i = startIdx; i <= endIdx; i++) found.add(i);
+          } else {
+            for (let i = startIdx; i <= 6; i++) found.add(i);
+            for (let i = 0; i <= endIdx; i++) found.add(i);
+          }
+        }
+      }
+
+      // Standalone day mentions, e.g. "Saturdays", "Tuesday and Thursday"
+      DAY_ABBR.forEach((abbr, idx) => {
+        const wordRegex = new RegExp('\\b' + abbr + '[a-z]*\\b', 'g');
+        if (wordRegex.test(lower)) found.add(idx);
+      });
+
+      return found;
+    }
+
+    function parseTimeRangeFromText(text) {
+      const regex = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)\s*[-–—to]+\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i;
+      const m = text.match(regex);
+      if (!m) return null;
+
+      function toMinutes(hour, minute, meridiem) {
+        hour = parseInt(hour, 10);
+        minute = minute ? parseInt(minute, 10) : 0;
+        meridiem = meridiem.toLowerCase();
+        if (meridiem === 'pm' && hour !== 12) hour += 12;
+        if (meridiem === 'am' && hour === 12) hour = 0;
+        return hour * 60 + minute;
+      }
+
+      const startMinutes = toMinutes(m[1], m[2], m[3]);
+      const endMinutes = toMinutes(m[4], m[5], m[6]);
+      return { startMinutes, endMinutes };
+    }
+
+    function isOpenNow(loc) {
+      if (!loc.dates) return false;
+      const lower = loc.dates.toLowerCase();
+      // Bail out on phrasing that signals we can't trust a simple parse
+      if (/appointment only|call to confirm|check .* for current|by appointment/.test(lower)) {
+        return false;
+      }
+
+      const days = parseDaysFromText(loc.dates);
+      const timeRange = parseTimeRangeFromText(loc.dates);
+      if (days.size === 0 || !timeRange) return false;
+
+      const now = new Date();
+      const currentDay = now.getDay(); // 0 = Sunday
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+      if (!days.has(currentDay)) return false;
+      return currentMinutes >= timeRange.startMinutes && currentMinutes <= timeRange.endMinutes;
+    }
+
+    let markers = [];
+    function renderMarkers(list) {
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+      list.forEach(loc => {
+        const openNow = isOpenNow(loc);
+        const marker = L.circleMarker([loc.lat, loc.lng], {
+          radius: 7,
+          color: openNow ? '#f9c400' : colors[loc.category],
+          weight: openNow ? 4 : 1,
+          fillColor: colors[loc.category],
+          fillOpacity: 0.9
+        }).addTo(map);
+        marker.bindPopup(buildPopupHtml(loc, openNow));
+        markers.push(marker);
+      });
+      document.getElementById('resultsCount').textContent =
+        list.length + (list.length === 1 ? ' location found' : ' locations found');
+    }
+
+    let activeCategory = 'all';
+    function setCategory(cat, btn) {
+      activeCategory = cat;
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+      const county = document.getElementById('countySelect').value;
+      const filtered = locations.filter(loc => {
+        const matchesCategory = activeCategory === 'all' || loc.category === activeCategory;
+        const matchesSearch = loc.name.toLowerCase().includes(searchTerm);
+        const matchesCounty = county === 'all' || loc.county === county;
+        return matchesCategory && matchesSearch && matchesCounty;
+      });
+      renderMarkers(filtered);
+    }
+
+    async function searchAddress() {
+      const address = document.getElementById('addressBox').value.trim();
+      if (!address) return;
+
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=us&limit=1`;
+
+      try {
+        const response = await fetch(url);
+        const results = await response.json();
+
+        if (results.length === 0) {
+          alert('Could not find that address. Try adding city and state.');
+          return;
+        }
+
+        const lat = parseFloat(results[0].lat);
+        const lng = parseFloat(results[0].lon);
+        map.setView([lat, lng], 11);
+
+        L.marker([lat, lng], {
+          icon: L.divIcon({ className: '', html: '<div style="background:#1565c0;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 0 4px rgba(0,0,0,0.4);"></div>' })
+        }).addTo(map).bindPopup('Your entered location').openPopup();
+
+      } catch (err) {
+        alert('Something went wrong looking up that address. Please try again.');
+      }
+    }
+
+    function useMyLocation() {
+      if (!navigator.geolocation) {
+        alert('Location services are not available in this browser.');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          map.setView([latitude, longitude], 11);
+          L.marker([latitude, longitude], {
+            icon: L.divIcon({ className: '', html: '<div style="background:#1565c0;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 0 4px rgba(0,0,0,0.4);"></div>' })
+          }).addTo(map).bindPopup('You are here').openPopup();
+        },
+        () => alert('Could not get your location. You can also use the county dropdown to browse by area.')
+      );
+    }
+
+    function renderFavoritesPage() {
+      const favIds = getFavorites();
+      const container = document.getElementById('favoritesList');
+      if (favIds.length === 0) {
+        container.innerHTML = '<p class="fav-empty">You have not favorited any locations yet. Tap the heart icon on a map pin to save it here.</p>';
+        return;
+      }
+      const favLocations = locations.filter(loc => favIds.includes(loc.id));
+      container.innerHTML = favLocations.map(loc => `
+        <div class="fav-item">
+          <h4>${loc.name} <button class="popup-fav-btn" onclick="toggleFavorite('${loc.id}')" title="Remove favorite">&#9829;</button></h4>
+          ${loc.address ? `<div class="popup-row"><b>Address:</b> ${loc.address}</div>` : ''}
+          ${loc.dates ? `<div class="popup-row"><b>Dates/Hours:</b> ${loc.dates}</div>` : ''}
+          ${loc.eligibility ? `<div class="popup-row"><b>Eligibility:</b> ${loc.eligibility}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    renderMarkers(locations);
+  </script>
+</body>
+</html>
